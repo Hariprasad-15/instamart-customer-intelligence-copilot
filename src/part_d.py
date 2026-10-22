@@ -362,3 +362,307 @@ TOOL_MAP = {
 
 #run_agent()
 #resume_agent()
+
+# =====================================================
+# AGENT TOOLS
+# =====================================================
+
+import sqlite3
+import json
+import os
+
+conn = sqlite3.connect("data/instamart.db")
+
+
+def get_order(order_id):
+
+    query = """
+    SELECT *
+    FROM orders
+    WHERE order_id = ?
+    """
+
+    result = pd.read_sql_query(
+        query,
+        conn,
+        params=[order_id]
+    )
+
+    if len(result) == 0:
+        return {
+            "found": False
+        }
+
+    return result.iloc[0].to_dict()
+
+
+def search_policy(query):
+
+    result = answer(query)
+
+    return {
+        "answer": result["answer"],
+        "sources": result["sources"]
+    }
+
+
+def calculate_refund(order):
+
+    if not order:
+        return {
+            "refund_amount": 0,
+            "needs_approval": False
+        }
+
+    if order["status"] != "completed":
+
+        return {
+            "refund_amount": 0,
+            "needs_approval": False
+        }
+
+    if order["delivery_minutes"] > 45:
+
+        refund_amount = float(
+            order["order_amount"]
+        )
+
+        return {
+            "refund_amount": refund_amount,
+            "needs_approval":
+                refund_amount > 1000
+        }
+
+    return {
+        "refund_amount": 0,
+        "needs_approval": False
+    }
+
+
+def issue_refund(order_id, amount):
+
+    return {
+        "action": "REFUND_ISSUED",
+        "order_id": order_id,
+        "amount": round(amount, 2)
+    }
+
+
+def escalate_to_human(
+    order_id,
+    reason
+):
+
+    return {
+        "action": "ESCALATED",
+        "order_id": order_id,
+        "reason": reason
+    }
+TOOLS_SPEC = {
+    "get_order":
+        "Retrieve order information",
+
+    "search_policy":
+        "Search policy library",
+
+    "calculate_refund":
+        "Calculate refund amount",
+
+    "issue_refund":
+        "Issue refund",
+
+    "escalate_to_human":
+        "Escalate case"
+}
+
+TOOL_MAP = {
+    "get_order": get_order,
+    "search_policy": search_policy,
+    "calculate_refund": calculate_refund,
+    "issue_refund": issue_refund,
+    "escalate_to_human": escalate_to_human
+}
+print("\n===== TOOL TEST =====")
+
+sample_order = get_order("ORD-100001")
+
+print(sample_order)
+
+print(
+    calculate_refund(
+        sample_order
+    )
+)
+# =====================================================
+# AGENT
+# =====================================================
+
+import re
+import json
+
+os.makedirs(
+    "outputs",
+    exist_ok=True
+)
+
+agent_runs = []
+refund_ledger = []
+
+def extract_order_id(text):
+
+    match = re.search(
+        r"ORD-\d{6}",
+        str(text)
+    )
+
+    if match:
+        return match.group(0)
+
+    return None
+
+
+def run_agent():
+
+    scenarios = pd.read_csv(
+        "data/raw/agent_scenarios.csv"
+    )
+
+    for _, row in scenarios.iterrows():
+
+        scenario_id = row["scenario_id"]
+        customer_id = row["customer_id"]
+        message = row["message"]
+
+        order_id = extract_order_id(
+            message
+        )
+
+        print(
+            f"\nProcessing {scenario_id}"
+        )
+
+        print(
+            f"Customer: {customer_id}"
+        )
+
+        print(
+            f"Order: {order_id}"
+        )
+
+        if not order_id:
+
+            result = {
+                "scenario_id": scenario_id,
+                "customer_id": customer_id,
+                "action": "ESCALATED",
+                "reason": "Order ID not found"
+            }
+
+            agent_runs.append(result)
+
+            continue
+
+        order = get_order(order_id)
+
+        if not order.get("order_id"):
+
+            result = {
+                "scenario_id": scenario_id,
+                "customer_id": customer_id,
+                "order_id": order_id,
+                "action": "ESCALATED",
+                "reason": "Order not found"
+            }
+
+            agent_runs.append(result)
+
+            continue
+
+        refund = calculate_refund(order)
+
+        if refund["refund_amount"] == 0:
+
+            result = {
+                "scenario_id": scenario_id,
+                "customer_id": customer_id,
+                "order_id": order_id,
+                "action": "DENIED",
+                "refund_amount": 0
+            }
+
+        elif refund["needs_approval"]:
+
+            result = {
+                "scenario_id": scenario_id,
+                "customer_id": customer_id,
+                "order_id": order_id,
+                "action": "ESCALATED",
+                "refund_amount":
+                    refund["refund_amount"],
+                "reason":
+                    "Refund exceeds INR 1000"
+            }
+
+        else:
+
+            result = {
+                "scenario_id": scenario_id,
+                "customer_id": customer_id,
+                "order_id": order_id,
+                "action": "REFUND",
+                "refund_amount":
+                    refund["refund_amount"]
+            }
+
+            refund_ledger.append(result)
+
+        agent_runs.append(result)
+
+    with open(
+        "outputs/agent_runs.jsonl",
+        "w",
+        encoding="utf-8"
+    ) as f:
+
+        for item in agent_runs:
+
+            f.write(
+                json.dumps(item)
+                + "\n"
+            )
+
+    with open(
+        "outputs/refund_ledger.jsonl",
+        "w",
+        encoding="utf-8"
+    ) as f:
+
+        for item in refund_ledger:
+
+            f.write(
+                json.dumps(item)
+                + "\n"
+            )
+
+    print(
+        "\nagent_runs.jsonl created"
+    )
+
+    print(
+        "refund_ledger.jsonl created"
+    )
+
+    print(
+        "\nAgent Runs:",
+        len(agent_runs)
+    )
+
+    print(
+        "Refund Ledger:",
+        len(refund_ledger)
+    )
+
+
+print("\n===== AGENT RUN =====")
+
+run_agent()

@@ -1,0 +1,7 @@
+{"scenario_id": "S1", "customer_id": "C0007", "order_id": "ORD-100048", "action": "REFUND", "refund_amount": 128.25}
+{"scenario_id": "S2", "customer_id": "C0008", "order_id": "ORD-100067", "action": "REFUND", "refund_amount": 135.0}
+{"scenario_id": "S3", "customer_id": "C0016", "order_id": "ORD-100145", "action": "ESCALATED", "refund_amount": 1999.0, "reason": "Refund exceeds INR 1000"}
+{"scenario_id": "S4", "customer_id": "C0001", "order_id": "ORD-100001", "action": "DENIED", "refund_amount": 0}
+{"scenario_id": "S5", "customer_id": "C0003", "order_id": "ORD-100025", "action": "DENIED", "refund_amount": 0}
+{"scenario_id": "S6", "customer_id": "C0001", "order_id": "ORD-999999", "action": "ESCALATED", "reason": "Order not found"}
+{"scenario_id": "S7", "customer_id": "C0007", "order_id": "ORD-100048", "action": "REFUND", "refund_amount": 128.25}

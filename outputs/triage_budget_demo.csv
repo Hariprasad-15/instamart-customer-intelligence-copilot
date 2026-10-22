@@ -1,0 +1,11 @@
+ticket_id,status,tokens_used,budget_remaining
+T0001,processed,120,5880
+T0002,processed,95,5785
+T0003,processed,110,5675
+T0004,processed,105,5570
+T0005,processed,130,5440
+T0006,processed,140,5300
+T0007,processed,160,5140
+T0008,processed,180,4960
+T0009,processed,220,4740
+T0010,budget_exhausted,0,40
