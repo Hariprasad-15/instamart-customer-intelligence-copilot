@@ -1,35 +1,537 @@
-Instamart Customer Intelligence & Support Copilot — Capstone Project
-Swiggy Instamart delivers groceries, dairy, snacks, personal-care items and small electronics in six metro cities within minutes. As the order base grows, three problems keep surfacing in the weekly leadership review: nobody trusts the raw order exports (duplicate rows, mixed spellings, impossible values), the retention team cannot tell which customers are about to stop ordering, and the support desk is drowning in thousands of free-text tickets that mix refunds, fraud reports, app crashes and late deliveries. The Head of Customer Experience has asked a small data and AI team to build one internal tool that fixes all three: a Customer Intelligence & Support Copilot.
+# Instamart Customer Intelligence Copilot
 
-You are that team. Over 21 days you will build the Copilot as one repository, in four connected Parts. Part A turns the messy exports into a trusted analytical database. Part B uses that database to segment customers and to predict who is likely to lapse. Part C reads support tickets, protects customer privacy, and routes each ticket using the segments from Part B. Part D builds a policy question-answering assistant and a refund agent that queries the database from Part A and reuses the policy retrieval built in the same Part. Every Part consumes what the previous Parts produced, so earlier mistakes travel forward — and the numeric checkpoints in this brief let you catch them early.
+## Overview
 
-All data in this project is synthetic and fictional, produced by a script given below. The brand name is used only to frame the scenario; nothing here is real Instamart data, policy or pricing. All monetary values are in Indian Rupees (INR).
+Instamart Customer Intelligence Copilot is an end-to-end analytics and AI solution built for customer intelligence, support automation, and refund decision support.
 
-As K increases, inertia always decreases because each cluster contains fewer points and therefore less within-cluster variance. However, inertia alone cannot determine the optimal K because it will continue decreasing even when additional clusters add little business value. K=4 was selected because it provides the highest silhouette score (0.526), a clear elbow in the inertia curve, and meaningful customer segments that can be acted upon by the business.
+The project combines:
 
-Cluster numbers are labels only and do not imply any ranking or ordering.
+- Data engineering and data quality remediation
+- SQL analytics and reporting
+- Customer segmentation using K-Means clustering
+- Customer lapse prediction using machine learning
+- Ticket classification with LLM guardrails
+- Retrieval-Augmented Generation (RAG) for policy lookup
+- Agent-based refund processing workflows
 
-Premium Customers:
-High monetary value customers. Recommended action:
-exclusive offers and priority support.
+---
 
-Loyal Customers:
-Frequent recent purchasers.
-Recommended action:
-loyalty rewards and subscriptions.
+## Repository Structure
 
-Occasional Shoppers:
-Moderate activity and spend.
-Recommended action:
-re-engagement campaigns and coupons.
+```text
+data/
+├── clean/
+├── policies/
+├── raw/
+└── instamart.db
 
-At Risk Customers:
-Long recency and low frequency.
-Recommended action:
-win-back promotions.
+outputs/
+├── customer_segments.csv
+├── lapse_model.joblib
+├── retention_list.csv
+├── triage_results.csv
+├── triage_budget_demo.csv
+├── agent_runs.jsonl
+├── refund_ledger.jsonl
+└── rfm.csv
 
-The selected model is Logistic Regression.
+src/
+├── part_a.py
+├── part_b.py
+├── lapse_model.py
+├── part_c.py
+└── part_d.py
 
-Although both models exceeded the required F1 score of 0.55, Logistic Regression achieved the better test F1 score (0.724 vs 0.710) and higher recall (0.809 vs 0.742). Missing a customer who is likely to lapse is more costly than contacting a loyal customer unnecessarily, therefore the higher-recall model was selected.
+sql/
+└── queries.sql
 
-Oversampling substantially increased recall from 0.809 to 0.944, meaning more customers at risk of lapsing were identified. Precision decreased slightly from 0.655 to 0.592, indicating some additional loyal customers would be targeted. For retention campaigns this tradeoff is often acceptable because missing a lapsing customer is generally more costly.
+state/
+└── .gitkeep
+```
+
+---
+
+# Reproduce
+
+## 1. Create Virtual Environment
+
+```bash
+python -m venv venv
+```
+
+Activate:
+
+```bash
+venv\Scripts\activate
+```
+
+---
+
+## 2. Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+## 3. Generate Dataset
+
+```bash
+python generate_data.py
+```
+
+---
+
+## 4. Run Part A
+
+```bash
+python src/part_a.py
+python src/clean_customers.py
+python src/clean_orders.py
+python src/create_database.py
+python src/validate_part_a.py
+```
+
+---
+
+## 5. Run Part B
+
+```bash
+python src/part_b.py
+python src/lapse_model.py
+```
+
+---
+
+## 6. Run Part C
+
+```bash
+python src/part_c.py
+```
+
+---
+
+## 7. Run Part D
+
+```bash
+python src/part_d.py
+```
+
+---
+
+# Part A – Data Engineering and SQL
+
+## Objectives
+
+- Audit raw datasets
+- Clean customer records
+- Clean order records
+- Create SQLite database
+- Validate outputs
+- Write analytical SQL queries
+
+## Results
+
+### Customer Dataset
+
+```text
+Rows: 1200
+Cities Standardized: 6
+Missing Ages After Cleaning: 0
+```
+
+### Orders Dataset
+
+```text
+Rows After Cleaning: 12309
+
+Completed Orders: 11110
+Cancelled Orders: 1199
+Pending Orders: 0
+```
+
+### Revenue
+
+```text
+INR 2,998,668.80
+```
+
+### Database
+
+```text
+data/instamart.db
+```
+
+Contains:
+
+```text
+customers
+products
+orders
+```
+
+---
+
+# Part B – Customer Segmentation & Lapse Prediction
+
+## RFM Analysis
+
+Built customer-level RFM features:
+
+- Recency
+- Frequency
+- Monetary
+
+### RFM Summary
+
+```text
+Customers: 1175
+
+Recency Median: 19
+Recency Max: 180
+
+Frequency Mean: 9.46
+Frequency Max: 33
+
+Monetary Mean: 2552.06
+Monetary Max: 14766.55
+```
+
+---
+
+## K-Means Clustering
+
+### Cluster Selection
+
+```text
+K = 4
+```
+
+### Best Silhouette Score
+
+```text
+0.526
+```
+
+### Customer Segments
+
+| Segment | Customers |
+|----------|----------:|
+| Occasional Shoppers | 436 |
+| Premium Customers | 138 |
+| Loyal Customers | 419 |
+| At Risk Customers | 182 |
+
+---
+
+## PCA
+
+```text
+PC1 = 0.634
+PC2 = 0.218
+
+Total Explained Variance = 0.852
+```
+
+---
+
+## Lapse Prediction
+
+### Cohort
+
+```text
+Customers: 1156
+Lapsed Customers: 443
+
+Lapse Rate: 38.32%
+```
+
+### Train/Test Split
+
+```text
+Train: 924
+Test: 232
+```
+
+---
+
+## Logistic Regression
+
+### Best Hyperparameter
+
+```text
+C = 0.1
+```
+
+### Results
+
+```text
+Precision = 0.655
+Recall = 0.809
+F1 Score = 0.724
+```
+
+---
+
+## Random Forest
+
+### Best Parameters
+
+```text
+max_depth = 3
+min_samples_leaf = 5
+```
+
+### Results
+
+```text
+Precision = 0.680
+Recall = 0.742
+F1 Score = 0.710
+```
+
+---
+
+## Selected Model
+
+```text
+Logistic Regression
+```
+
+Reason:
+
+- Higher F1 score
+- Higher recall
+- Better suited for customer retention use cases
+
+---
+
+## Deliverables
+
+```text
+outputs/customer_segments.csv
+outputs/lapse_model.joblib
+outputs/retention_list.csv
+```
+
+---
+
+# Part C – LLM Ticket Triage
+
+## Input Guardrails
+
+### Empty Tickets
+
+```text
+4
+```
+
+### Long Tickets
+
+```text
+4
+```
+
+---
+
+## PII Redaction
+
+### Emails
+
+```text
+55
+```
+
+### Phone Numbers
+
+```text
+91
+```
+
+### Order IDs
+
+```text
+132
+```
+
+### Total Redactions
+
+```text
+278
+```
+
+---
+
+## Classification Output Validation
+
+### JSON Classifications
+
+```text
+135
+```
+
+### Keyword Classifications
+
+```text
+12
+```
+
+### Invalid Outputs
+
+```text
+9
+```
+
+---
+
+## Retry Handling
+
+```text
+19 transient failures recovered
+0 permanent failures
+```
+
+---
+
+## Deliverables
+
+```text
+outputs/triage_results.csv
+outputs/triage_budget_demo.csv
+```
+
+---
+
+# Part D – Retrieval-Augmented Generation & Refund Agent
+
+## Policy Chunking
+
+Chunk Size:
+
+```text
+40 words
+```
+
+Overlap:
+
+```text
+10 words
+```
+
+### Generated Chunks
+
+```text
+Total Chunks: 15
+```
+
+Distribution:
+
+```text
+refund_policy.txt      : 4
+delivery_policy.txt    : 3
+payment_policy.txt     : 3
+escalation_policy.txt  : 3
+privacy_policy.txt     : 2
+```
+
+---
+
+## Retrieval Evaluation
+
+### Answerable Questions
+
+```text
+12
+```
+
+### Retrieval Success
+
+```text
+12 / 12
+```
+
+### Grounded Answers
+
+```text
+12 / 12
+```
+
+---
+
+## Unanswerable Questions
+
+```text
+2
+```
+
+### Successful Fallback Responses
+
+```text
+2
+```
+
+---
+
+## Refund Agent
+
+Implemented Tools:
+
+```text
+get_order()
+search_policy()
+calculate_refund()
+issue_refund()
+escalate_to_human()
+```
+
+---
+
+## Agent Execution
+
+### Scenarios Executed
+
+```text
+7
+```
+
+### Refunds Issued
+
+```text
+3
+```
+
+### Deliverables
+
+```text
+outputs/agent_runs.jsonl
+outputs/refund_ledger.jsonl
+```
+
+---
+
+# Limitations and Next Steps
+
+## Current Limitations
+
+- TF-IDF retrieval relies on keyword overlap and may miss semantic matches.
+- Rule-driven refund calculations use simplified business logic.
+- Agent workflow is deterministic and limited to predefined tools.
+- Ticket classification uses a mock LLM environment.
+
+---
+
+## Future Enhancements
+
+- Replace TF-IDF with vector embeddings.
+- Add semantic search and reranking.
+- Introduce real LLM API integration.
+- Add workflow orchestration and approval routing.
+- Deploy models and agents as production APIs.
+- Implement monitoring and observability dashboards.
+
+---
+
+# Author
+
+**Hariprasad K**
