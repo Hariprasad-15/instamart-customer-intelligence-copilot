@@ -31,3 +31,5 @@ win-back promotions.
 The selected model is Logistic Regression.
 
 Although both models exceeded the required F1 score of 0.55, Logistic Regression achieved the better test F1 score (0.724 vs 0.710) and higher recall (0.809 vs 0.742). Missing a customer who is likely to lapse is more costly than contacting a loyal customer unnecessarily, therefore the higher-recall model was selected.
+
+Oversampling substantially increased recall from 0.809 to 0.944, meaning more customers at risk of lapsing were identified. Precision decreased slightly from 0.655 to 0.592, indicating some additional loyal customers would be targeted. For retention campaigns this tradeoff is often acceptable because missing a lapsing customer is generally more costly.
