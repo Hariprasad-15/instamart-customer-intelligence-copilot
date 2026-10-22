@@ -328,3 +328,37 @@ print("Unanswerable Questions:",
 
 print("Fallback Hits:",
       fallback_hits)
+
+def get_order(order_id):
+    pass
+
+def search_policy(query):
+    return answer(query)
+
+def calculate_refund(order):
+    pass
+
+def issue_refund(order_id, amount):
+    pass
+
+def escalate_to_human(order_id, reason):
+    pass
+
+TOOLS_SPEC = {
+    "get_order": "...",
+    "search_policy": "...",
+    "calculate_refund": "...",
+    "issue_refund": "...",
+    "escalate_to_human": "..."
+}
+
+TOOL_MAP = {
+    "get_order": get_order,
+    "search_policy": search_policy,
+    "calculate_refund": calculate_refund,
+    "issue_refund": issue_refund,
+    "escalate_to_human": escalate_to_human
+}
+
+#run_agent()
+#resume_agent()
