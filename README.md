@@ -27,3 +27,7 @@ At Risk Customers:
 Long recency and low frequency.
 Recommended action:
 win-back promotions.
+
+The selected model is Logistic Regression.
+
+Although both models exceeded the required F1 score of 0.55, Logistic Regression achieved the better test F1 score (0.724 vs 0.710) and higher recall (0.809 vs 0.742). Missing a customer who is likely to lapse is more costly than contacting a loyal customer unnecessarily, therefore the higher-recall model was selected.
