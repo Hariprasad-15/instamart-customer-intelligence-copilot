@@ -4,3 +4,26 @@ Swiggy Instamart delivers groceries, dairy, snacks, personal-care items and smal
 You are that team. Over 21 days you will build the Copilot as one repository, in four connected Parts. Part A turns the messy exports into a trusted analytical database. Part B uses that database to segment customers and to predict who is likely to lapse. Part C reads support tickets, protects customer privacy, and routes each ticket using the segments from Part B. Part D builds a policy question-answering assistant and a refund agent that queries the database from Part A and reuses the policy retrieval built in the same Part. Every Part consumes what the previous Parts produced, so earlier mistakes travel forward — and the numeric checkpoints in this brief let you catch them early.
 
 All data in this project is synthetic and fictional, produced by a script given below. The brand name is used only to frame the scenario; nothing here is real Instamart data, policy or pricing. All monetary values are in Indian Rupees (INR).
+
+As K increases, inertia always decreases because each cluster contains fewer points and therefore less within-cluster variance. However, inertia alone cannot determine the optimal K because it will continue decreasing even when additional clusters add little business value. K=4 was selected because it provides the highest silhouette score (0.526), a clear elbow in the inertia curve, and meaningful customer segments that can be acted upon by the business.
+
+Cluster numbers are labels only and do not imply any ranking or ordering.
+
+Premium Customers:
+High monetary value customers. Recommended action:
+exclusive offers and priority support.
+
+Loyal Customers:
+Frequent recent purchasers.
+Recommended action:
+loyalty rewards and subscriptions.
+
+Occasional Shoppers:
+Moderate activity and spend.
+Recommended action:
+re-engagement campaigns and coupons.
+
+At Risk Customers:
+Long recency and low frequency.
+Recommended action:
+win-back promotions.
